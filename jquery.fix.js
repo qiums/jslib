@@ -423,19 +423,15 @@ $.ajaxSetup({
 	dataType: 'json',
 	timeout: 20000,
 	beforeSend: function(xhr) {
-		if ('undefined' == typeof this.element) return;
-		/*if (this.elem && $(this.elem).hasClass('show-loading') && 'undefined' != typeof dialog) {
-			this.obload = $.dialog({
-				type: 'load'
-			});
-
-		}*/
+		if (this.type === 'POST'){
+			if ($.G && $.G.token) this.data += '&token=' + $.G.token;
+		}
 	},
 	error: function(xhr, text, err) {
-		if ('timeout' == text) {
-			var tips = $.lang['ajax-timeout-tips'] || 'Time out, please try again.';
-			if ('undefined' == typeof dialog) return alert(tips);
-			$.dialog(tips, {timeout:3});
+		if ('timeout' === text) {
+			err = '<div><b>' + ($.lang('ajax-timeout-tips') || 'Time out, please try again.') + '</b></div><p> - '+ this.url + '</p>';
+			if ('undefined' === typeof $.dialog) return alert(err);
+			$.dialog(err, {id: 'plupload-error', title: $.lang('Ajax load timeout')});
 		}
 	},
 	complete: function(xhr, ts) {

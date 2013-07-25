@@ -113,9 +113,7 @@ jQuery.fn.ckSubmit=function(opts){
 	});
 };
 jQuery.fn.ckForm = function(opts){
-	return this.each(function(){
-		return $.ckForm(this, opts);
-	});
+	return $.ckForm(this[0], opts);
 };
 jQuery.fn.ckBlur = function(){
 	return this.each(function(){
@@ -135,19 +133,17 @@ jQuery.fn.saveForm = function(opts, suc){
 	return this.each(
 	function(){
 		if (parseInt($(this).data('ckblur'), 10)===1) $(this).ckBlur();
-		$(this).removeData('ckblur').bind('form-pre-serialize',
-		function(e, form, op, veto){
-			veto.veto = !$(this).ckForm();
-		}).ajaxForm($.extend({
+		$(this).removeData('ckblur').ajaxForm($.extend({
 			dataType: $(this).data('type') || 'json',
 			formele: this,
-			beforeSend: function(xhr){
+			beforeSubmit: function(xhr){
+				if (!$(this.formele).ckForm()) return false;
 				if ($('.ajax-tips:hidden').length> 0) $('.ajax-tips').fadeIn();
 				$('button', this.formele).attr('disabled', true);
 			},
 			success: function(res){
 				$('button', this.formele).attr('disabled', false);
-				if ('json' != this.dataType){
+				if ('json' !== this.dataType){
 					if (suc) return suc.call(this. res);
 					return ;
 				}
@@ -157,7 +153,7 @@ jQuery.fn.saveForm = function(opts, suc){
 						for (var k in res.body){
 							$(this.formele).trigger('form-check-error', [res.body[k].id, res.body[k].error]);
 						}
-						return ;
+						return $.ckSuccess(res);;
 					}
 					return $.dialog(res.message, {
 						appendClass:'ui-dialog-error', timeout:3,
@@ -171,12 +167,13 @@ jQuery.fn.saveForm = function(opts, suc){
 	});
 };
 $.ckSuccess = function(res){
-	if ($('.ajax-tips:hidden').length> 0){
+	if ($('.ajax-tips').length> 0){
 		$('.ajax-tips').html(res.message).fadeIn();
 		return setTimeout(function(){
 			$('.ajax-tips').fadeOut();
 		}, 3000);
 	}
+	if (0===res.code) return ;
 	return $.dialog(res.message, {
 		appendClass: 'ui-dialog-ok', timeout:3,
 		buttons:{

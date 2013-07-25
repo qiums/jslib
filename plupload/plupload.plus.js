@@ -10,31 +10,32 @@ var plupload_plus = function(el, op){
 plupload_plus.prototype = {
 	init: function(){
 		if (!this.button.length){
-			this.button = $((this.op.browse ? '<a href="' + this.op.browse + '" />' : '<button type="button" />')).html('<i class="icon-upload"></i>')
+			this.button = $((this.op.browse ? '<a href="' + this.op.browse + '" title="' + $.lang('Choose file') + '" />' : '<button type="button" />')).html('<i class="icon-upload"></i>')
 				.addClass('btn').insertAfter(this.ele);
 			this.op.browse ? this.button.on('click.begin-upload', $.proxy(this.open, this)) : this.open();
 		}
 	},
-	open: function(){
+	open: function(e){
 		if (this.button.is(':button')){
 			this.op.plqueue = false;
 			this.op.single = true;
-			return this.upload(this.button);
+			return this.upload(window.event, this.button);
 		}
+		jQuery.doane(e);
 		this.button.dialog({
-			width:720, id: 'plupload-'+ $(this.ele).attr('id'), render: $.isFunction(this.op.onRender) ? this.op.onRender : function(){},
+			width:800, id: 'plupload-'+ (this.op.panelname || $(this.ele).attr('id')),
+			tip: $('<button type="button" class="btn" />').html('<i class="icon-upload"></i>' + $.lang('Upload')).bind('tip-callback', {op: this.op}, this.upload),
 			buttons: {
-				'Submit': function(){},
-				'Cancel': function(){}
+				'Submit.btn-primary': function(){},
+				'Cancel': 'close'
 			},
-			onRender: function(){
-				if (!this.ele) return ;
-				this.render.call(this);
-			}
+			onRender: $.isFunction(this.op.onRender) ? this.op.onRender : function(){}
 		});
 	},
-	upload: function(b){
-		b.pluploader(jQuery.extend({multipart_params: this.op.onQuery || {}}, this.op || {}));
+	upload: function(e, b){
+		var op = (e.data && e.data.op) ? e.data.op : this.op;
+		b = b || $(this);
+		return b.pluploader(jQuery.extend({multipart_params: op.onQuery || {}}, op || {}));
 	}
 };
 var pluploader = function(el, options){
@@ -46,27 +47,26 @@ var pluploader = function(el, options){
 		function(){$(el).pluploader(options);});
 	}
 	if ('undefined' === typeof options.url) return false;
-	if ($(el).prev().is(':text')) {
-		options.multipart_params.oldfile = $(el).prev().val();
-	}
+	options.multipart_params.ajax = 'json';
 	if (options.single) {
 		delete options.single;
-		options.FileAdded = function(e, up, files) {
-			$.each(files, function(i, file) {
-				if (i < 1)
-					return true;
+		$(el).bind('plupload-FilesAdded', function(e, up, files){
+			$.each(up.files, function(i, file){
+				if (i+1 === up.files.length) return true;
 				up.removeFile(file);
 			});
 			if (up.settings.autoupload){
 				up.start();
 			}else{
-				$(el).prev(':text').val(file.name);
-				$.pluploader.autoup[el.id] = true;
+				if ($(el).prev().is(':text')){
+					if (!up.settings.multipart_params.oldfile) up.settings.multipart_params.oldfile = $(el).prev(':text').val();
+					$(el).prev(':text').val(up.files[0].name);
+				}
 			}
 			return false;
-		}
+		});
 	}
-	$.each(['FileAdded', 'QueueChanged', 'UploadProgress', 'UploadComplete'],
+	$.each(['FilesAdded', 'QueueChanged', 'UploadProgress', 'FileUploaded', 'UploadComplete'],
 	function(i, fn){
 		if (options[fn]){
 			$(el).bind('plupload-' + fn, options[fn]);
@@ -75,13 +75,14 @@ var pluploader = function(el, options){
 	});
 	options = jQuery.extend({
 		flash_swf_url : $.pluploader.jspath()+'/plupload/plupload.flash.swf',
-		resize : {width : 1000, height : 1000, quality : 90},
+		resize : {width : 1200, height : 1200, quality : 90},
 		filters: [
 			{title : "图片文件", extensions : "jpg,gif,png"}
 		],
-		chunk_size: '1mb', use_size: 0, results: [],// el: el,
+		chunk_size: '1mb', use_size: 0, results: [], max_file_size: '20mb',
 		init: {
 			BeforeUpload: function(up, files){
+				if (false === $(el).triggerHandler('plupload-BeforeUpload', [up, files])) return ;
 				$('.ajax-tips').each(function(){
 					$(this).data('default-html', $(this).html()).html($.pluploader.lang('Start upload..')).show();
 				});
@@ -98,7 +99,7 @@ var pluploader = function(el, options){
 							}
 						}
 					};
-				if (!options.appdata) message = '<strong>' + $.pluploader.lang('Files queue error') + ':</strong><br /><br />'+ message;
+				if (!options.appdata) message = '<strong>' + $.pluploader.lang(err.ac==='fileadded' ? 'Files queue error' : 'Some documents found an error') + ':</strong><br /><br />'+ message;
 				$.dialog(message, options);
 				return false;
 			},
@@ -109,12 +110,13 @@ var pluploader = function(el, options){
 					if(-1 === up.settings.over_size) return true;
 					up.settings.over_size -= file.size;
 					if(up.settings.over_size<0){
-						up.settings.init.Error(up, {message: $.pluploader.lang('No enough free space.'), file: file});
+						up.settings.init.Error(up, {message: $.pluploader.lang('No enough free space.'), file: file, ac: 'fileadded'});
 						up.removeFile(file);
 					}
 				});
 			},
 			FilesRemoved: function(up, files){
+				$(el).triggerHandler('plupload-FilesRemoved', [up, files]);
 				$.each(files, function(index, file){
 					up.settings.use_size -= file.size;
 					if(-1 === up.settings.over_size) return true;
@@ -130,7 +132,7 @@ var pluploader = function(el, options){
 			FileUploaded: function(up, file, info){
 				if(info.response){
 					info.response = eval('('+info.response+')');
-					if(104 === parseInt(info.response.code,10)) up.stop();
+					if(104 === parseInt(info.response.body.code,10)) up.stop();
 				}
 				up.settings.results.push([file, info]);
 				$(el).triggerHandler('plupload-FileUploaded', [up, file, info.response]);
@@ -139,6 +141,7 @@ var pluploader = function(el, options){
 				$('.ajax-tips').each(function(){
 					$(this).html($(this).data('default-html'));
 				});
+				$.pluploader.reset(up);
 				$(el).triggerHandler('plupload-UploadComplete', [up, files]);
 			}
 		}
@@ -159,6 +162,7 @@ if (jQuery.lang){
 		'File extension error.': "文件类型错误",
 		'File size error.': '文件大小超过限制',
 		'Files queue error': "添加以下文件到队列时发生错误",
+		'Some documents found an error': '以下文件发生错误',
 		'No enough free space.': "剩余的空间不足，已停止上传",
 		'Start upload': "开始上传",
 		'Start uploading queue': "上传队列",
@@ -173,10 +177,13 @@ $.pluploader = {
 	loaded: false,
 	selector: {},
 	autoup: {},
-	reset: function(up){
-		if (undefined===jQuery.fn.pluploadQueue) return ;
-		up.refresh();
-		this.setsize();
+	reset: function(selector){
+		$.each((selector ? {'a':selector} : this.selector), function(i, up){
+			$.each(up.files, function(k, file){
+				up.removeFile(file);
+			});
+			up.refresh();
+		});
 	},
 	setsize: function(){
 		setTimeout(function(){
@@ -211,6 +218,7 @@ $.pluploader = {
 	}
 };
 $.fn.pluploader = function(options, fn){
+	if (!options) return new pluploader(this[0]);
 	if ($.isFunction(options.multipart_params)){
 		fn = options.multipart_params;
 		options.multipart_params = {};

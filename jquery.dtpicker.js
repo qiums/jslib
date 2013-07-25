@@ -124,6 +124,7 @@ dtpicker.prototype = {
 			if ('number'!==$.type(range[k])) this.options.range[k] = new Date().strtotime(range[k]);
 		}
 		this.options.hastime = (ex==='datetime' && 'undefined'!==typeof this.options.format[1]);
+		if (this.options.hastime && this.options.calendars<2) this.options.calendars = 2;
 	},
 	mktime: function(){
 		var el = this.ele, logic = $(el).attr('class').match(/(lt|gt)-([^\s"'>]+)/);

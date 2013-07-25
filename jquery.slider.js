@@ -7,7 +7,7 @@
             !options.width?obj.width(w):obj.width(options.width);
             obj.css({"overflow":"hidden","position":"relative"});
 			$div.css({'position':'absolute','z-index':'5'}).eq(0).css('z-index',6);
-            if ('scroll'==options.animate){
+            if ('scroll'===options.animate){
 				if (!options.vertical) $div.css('float','left');
             };
             if (s>1 && options.controlsShow){
@@ -30,7 +30,7 @@
 			play();
 			relay();
 			function play(){
-				if (s==1) return ;
+				if (s===1) return ;
 				if(count>=100) return clearInterval(timeout);
                 $div.stop(true,true);
 				flash();

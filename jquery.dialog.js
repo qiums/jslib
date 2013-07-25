@@ -139,7 +139,14 @@ dialog.prototype = {
 				var foot = $('<div class="ui-footer"></div>').appendTo(this.boxes);
 				if (this.options.tip || this.options.timeout){
 					var left = $('<div class="ui-footer-left" />').appendTo(foot);
-					if (this.options.tip) $('<span class="ui-footer-tip" />').append(this.options.tip).appendTo(left);
+					if (this.options.tip){
+						var ftip = $('<span class="ui-footer-tip" />').appendTo(left);
+						if ('string'===$.type(this.options.tip)){
+							ftip.append(this.options.tip);
+						}else if (this.options.tip instanceof jQuery){
+							this.options.tip.appendTo(ftip).trigger('tip-callback');
+						}
+					}
 					if (this.options.timeout)
 						$('<span class="ui-footer-timeout" />').append('<strong>' + this.options.timeout + '</strong> 秒后关闭').appendTo(left);
 				}
@@ -201,7 +208,7 @@ dialog.prototype = {
 	},
 	content: function(){
 		var me = this, b = this.dbody;
-		if (!this.options.reload){
+		if (b.is(':empty') || this.options.reload){
 			if (this.options.message){
 				if (!this.options.appdata) b.empty();
 				b.append(this.options.message);
@@ -406,7 +413,7 @@ $.fn.dropmenu = function(op, g){
 		op.cachekey = $(this).attr('name').replace(/[\[\]]/, '');
 		if (!handle.length){
 			handle = $('<a href="javascript:;" class="dropmenu-handle" />')
-				.data('target', target).text($(this).data('alt')).insertAfter(this);
+				.data('target', target).text($(this).data('label')).insertAfter(this);
 		}
 		handle.attr('title', $(this).data('alt'));
 		if (!$('#'+target).length) $('<div id="'+target+'" />').appendTo('body');
