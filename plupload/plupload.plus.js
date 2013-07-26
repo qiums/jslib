@@ -33,7 +33,7 @@ plupload_plus.prototype = {
 		});
 	},
 	upload: function(e, b){
-		var op = (e.data && e.data.op) ? e.data.op : this.op;
+		var op = (e && e.data && e.data.op) ? e.data.op : this.op;
 		b = b || $(this);
 		return b.pluploader(jQuery.extend({multipart_params: op.onQuery || {}}, op || {}));
 	}
