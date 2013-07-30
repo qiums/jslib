@@ -415,7 +415,7 @@ $.fn.dropmenu = function(op, g){
 			handle = $('<a href="javascript:;" class="dropmenu-handle" />')
 				.data('target', target).text($(this).data('label')).insertAfter(this);
 		}
-		handle.attr('title', $(this).data('alt'));
+		handle.attr('title', $(this).data('label') || $(this).data('alt'));
 		if (!$('#'+target).length) $('<div id="'+target+'" />').appendTo('body');
 		if ($(this).val()!==''){
 			dropmenu.call(this, 'init');
@@ -436,7 +436,10 @@ $.fn.dropmenu = function(op, g){
 			for (k in data){
 				if (data[k]['id'] === $(this).val()){
 					$(this).next().text(data[k][op.datakey]).data('node', data[k]['node']);
-					if ($.isFunction(op.onRender)) op.onRender.call(this);
+					if ($.isFunction(op.onRender)){
+						op.onRender.call(this);
+						delete op.onRender;
+					}
 					break;
 				}
 			}
