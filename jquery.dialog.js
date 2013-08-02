@@ -211,7 +211,11 @@ dialog.prototype = {
 		if (b.is(':empty') || this.options.reload){
 			if (this.options.message){
 				if (!this.options.appdata) b.empty();
-				b.append(this.options.message);
+				if (this.options.message instanceof jQuery){
+					this.options.message.appendTo(b);
+				}else{
+					b.append(this.options.message);
+				}
 			}else if(this.ele){
 				var href = $(this.ele).attr('href')
 					, target = this.options.target;
