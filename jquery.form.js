@@ -55,6 +55,13 @@ jQuery.fn.ckField = function(val){
 		}
 		return true;
 	}
+	if ($(this).hasClass('cannull') && ob.val==='') return true;
+	if (!ob.len && !m['min']) return true;
+	if (m['min']){
+		m['min'] = parseInt(m['min'][1]);
+		if (m['min']>ob.len) return false;
+	}
+	if (m['max'] && ob.len>m['max']) return false;
 	if (m.logic && m.logic.length>2){
 		//check-1,checked-min1,checked-max5,checked-remember,notnull-username,lt-start_time,gt-end_time
 		if ('checked' === m.logic[1] && m.logic[2].search(/^(min|max)*\d+$/i) !== -1){
@@ -85,13 +92,6 @@ jQuery.fn.ckField = function(val){
 				break;
 		}
 	}
-	if ($(this).hasClass('cannull') && ob.val==='') return true;
-	if (!ob.len && !m['min']) return true;
-	if (m['min']){
-		m['min'] = parseInt(m['min'][1]);
-		if (m['min']>ob.len) return false;
-	}
-	if (m['max'] && ob.len>m['max']) return false;
 	if (ob.rule){
 		ob.rule = ob.rule[1]; ob.rule_data = $(document).data(ob.rule);
 		if (ob.rule_data){
@@ -166,7 +166,7 @@ jQuery.fn.saveForm = function(opts, suc){
 		}, opts || {}));
 	});
 };
-$.ckSuccess = function(res){
+$.ckSuccess = function(res, fn){
 	if ($('.ajax-tips').length> 0){
 		$('.ajax-tips').html(res.message).fadeIn();
 		return setTimeout(function(){
@@ -177,7 +177,7 @@ $.ckSuccess = function(res){
 	return $.dialog(res.message, {
 		appendClass: 'ui-dialog-ok', timeout:3,
 		buttons:{
-			'Close':'close'
+			'Close': fn || 'close'
 		}
 	});
 };
@@ -189,10 +189,11 @@ $.ckOption = function(ele, opts){
 	if (!opts.error){
 		opts.error = function(e, el, tip){
 			tip = tip || $(el).data('alt') || $(el).attr('placeholder');
-			if (!tip) return ;
-			if (!$.dialog) return alert(tip);
-			$(el).closest('li,div').addClass('ckerror');
-			$(el).dialog({type:'popover', message:tip, position:'top'});
+			if (tip){
+				if (!$.dialog) return alert(tip);
+				$(el).closest('li,div').addClass('ckerror');
+				$(el).dialog({type:'popover', message:tip, position:'top'});
+			}
 			try{el.focus();}catch(e){};
 			return false;
 		}

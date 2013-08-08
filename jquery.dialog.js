@@ -51,7 +51,7 @@ dialog.prototype = {
 			this.boxes = $('<div class="ui-popover ui-popover-' + pos + '" />').insertAfter(this.ele);
 			if (title){
 				var header = $('<h3 class="ui-popover-title" />').append(title).appendTo(this.boxes);
-				if ('follow'==mode){
+				if ('follow'===mode){
 					$('<button type="button" class="close" data-dismiss="dialog">&times;</button>').appendTo(header)
 						.on('click.hide.popover', {ob: this.boxes}, function(e){
 							e.data.ob.css('top', '-1000px');
@@ -226,7 +226,7 @@ dialog.prototype = {
 					$(target).appendTo(b);
 				}else{
 					if (this.options.type === 'frame') return this.frame();
-					if (href){
+					if (href && '#'!==href && 'javascript:;'!==href){
 						b.height(200);
 						this.position();
 						return b.addClass('loading')
@@ -280,9 +280,11 @@ dialog.prototype = {
 			var me = this, timer = this.options.timeout;
 			this.timer = setInterval(function(){
 				timer--;
-				var t = $('.ui-footer-timeout>strong', me.boxes);
+				var t = $('.ui-footer-timeout>strong', me.boxes)
+					, b = $('.ui-footer .btn:first', me.boxes);
 				if (0 < timer) return t.text(timer);
-				t.text(me.options.timeout);
+				t.text('0');
+				if (b.length>0) return b.trigger('click');
 				return me.hide();
 			}, 1000);
 		}

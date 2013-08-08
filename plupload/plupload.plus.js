@@ -6,13 +6,14 @@ var plupload_plus = function(el, op){
 	this.button = $(this.ele).next('button');
 	this.op = jQuery.extend({}, $(el).data() || {}, op || {});
 	this.init();
-}
+};
 plupload_plus.prototype = {
 	init: function(){
 		if (!this.button.length){
-			this.button = $((this.op.browse ? '<a href="' + this.op.browse + '" title="' + $.lang('Choose file') + '" />' : '<button type="button" />')).html('<i class="icon-upload"></i>')
+			this.button = $((this.op.browse ? '<a href="'+ this.op.browse +'" title="' + $.lang('Choose file') + '" />' : '<button type="button" />')).html('<i class="icon-upload"></i>')
 				.addClass('btn').insertAfter(this.ele);
 			this.op.browse ? this.button.on('click.begin-upload', $.proxy(this.open, this)) : this.open();
+			delete this.op.browse;
 		}
 	},
 	open: function(e){
@@ -22,20 +23,22 @@ plupload_plus.prototype = {
 			return this.upload(window.event, this.button);
 		}
 		jQuery.doane(e);
-		this.button.dialog({
-			width:800, id: 'plupload-'+ (this.op.panelname || $(this.ele).attr('id')),
+		var args = jQuery.extend({}, {
+			width:930, id: this.op.panelname || $(this.ele).attr('id'),
 			tip: $('<button type="button" class="btn" />').html('<i class="icon-upload"></i>' + $.lang('Upload')).bind('tip-callback', {op: this.op}, this.upload),
 			buttons: {
-				'Submit.btn-primary': function(){},
+				'Submit.btn-primary': $.isFunction(this.op.onSubmit) ? this.op.onSubmit : function(){},
 				'Cancel': 'close'
-			},
-			onRender: $.isFunction(this.op.onRender) ? this.op.onRender : function(){}
-		});
+			}
+		}, this.op);
+		try{
+			delete this.op.onSubmit;
+		}catch(e){};
+		this.button.dialog(args);
 	},
 	upload: function(e, b){
-		var op = (e && e.data && e.data.op) ? e.data.op : this.op;
 		b = b || $(this);
-		return b.pluploader(jQuery.extend({multipart_params: op.onQuery || {}}, op || {}));
+		return b.pluploader((e && e.data && e.data.op) ? e.data.op : this.op);
 	}
 };
 var pluploader = function(el, options){
@@ -50,7 +53,8 @@ var pluploader = function(el, options){
 	options.multipart_params.ajax = 'json';
 	if (options.single) {
 		delete options.single;
-		$(el).bind('plupload-FilesAdded', function(e, up, files){
+		//$(el).bind('plupload-FilesAdded', function(e, up, files){
+		options.FilesAdded = function(e, up, files){
 			$.each(up.files, function(i, file){
 				if (i+1 === up.files.length) return true;
 				up.removeFile(file);
@@ -64,7 +68,7 @@ var pluploader = function(el, options){
 				}
 			}
 			return false;
-		});
+		};
 	}
 	$.each(['FilesAdded', 'QueueChanged', 'UploadProgress', 'FileUploaded', 'UploadComplete'],
 	function(i, fn){
@@ -153,7 +157,7 @@ var pluploader = function(el, options){
 	uploader.init();
 	$.pluploader.selector[el.id] = uploader;
 	return uploader;
-}
+};
 if (jQuery.lang){
 	jQuery.lang({
 		'Select files': '选择文件',
@@ -219,6 +223,7 @@ $.pluploader = {
 };
 $.fn.pluploader = function(options, fn){
 	if (!options) return new pluploader(this[0]);
+	options = jQuery.extend({}, {multipart_params:{}}, options || {});
 	if ($.isFunction(options.multipart_params)){
 		fn = options.multipart_params;
 		options.multipart_params = {};
@@ -236,8 +241,8 @@ $.fn.plupload_plus = function(options){
 	}
 	return this.each(function(){
 		return new plupload_plus(this, options);
-	})
-}
+	});
+};
 /*$.getScript($.jspath() +'/plupload/plupload.'+$.pluploader.runtimes()+'.js',
 	function() {
 		$('.form-file').plupload_plus();
