@@ -243,7 +243,7 @@ jQuery.fn.ubbparse = function(tag, url, post){
 	fn.venue = function(html){
 		var data=this.data || this;
 		$.each(data, function(k, d){
-			$('#venue-'+d.id).replaceWith($.replace_tmpl(html, [d]));
+			$('#venue-'+d.id).replaceWith($.tmpl(html, [d]));
 		});
 	}
 	fn.media = function(html){
@@ -252,17 +252,17 @@ jQuery.fn.ubbparse = function(tag, url, post){
 	}
 	$(self).each(function(){
 		var id=$(this).attr('id'),re=new RegExp('('+tag+')','ig'),a;
-		if (!id || id.search(re)==-1) return $(this).replaceWith('');
+		if (!id || id.search(re)===-1) return $(this).replaceWith('');
 		a=id.match(re)[0];id=id.replace(a+'-','');
-		if ('undefined'==typeof d[a]) d[a]=[];
+		if ('undefined'===typeof d[a]) d[a]=[];
 		d[a].push(id);
 		$(this).removeClass('ubbparse');
 	});
 	$.each(d, function(a,c){
-		$.getJSON(url, jQuery.extend(post||{}, {mid:a, ids: c}), function(json){
+		$.post(url, jQuery.extend(post||{}, {mid:a, ids:c}), function(res){
 			if(!$.isFunction(fn[a])) return true;
-			return fn[a].call(json, $('#'+a+'-tmpl').html());
-		});
+			return fn[a].call(res.body, $('#'+a+'-tmpl').text());
+		}, 'json');
 	});
 };
 jQuery.fn.ubbpreload = function(op){
