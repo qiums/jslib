@@ -426,6 +426,7 @@ $.ajaxSetup({
 		if (this.type === 'POST'){
 			if ($.G && $.G.token) this.data += '&token=' + $.G.token;
 		}
+		$('<div class="ajax-loading" />').prependTo('body');
 	},
 	error: function(xhr, text, err) {
 		if ('timeout' === text) {
@@ -435,7 +436,7 @@ $.ajaxSetup({
 		}
 	},
 	complete: function(xhr, ts) {
-		if (this.obload) this.obload.dialog('destroy');
+		$('.ajax-loading').remove();
 	}
 	/*,
 	success: function(data){

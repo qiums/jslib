@@ -66,14 +66,15 @@ mselect.prototype = {
 					value = data[key]['id'];
 					text = data[key][(opts.kname || 'name')];
 				}
+				if (data[key].child && !$.isEmptyObject(data[key].child)) text = '[+]' + text;
 				opt += '<option value="'+value+'"';
-				if (value==this.val[x]) opt += ' selected="selected"';
+				if (value===this.val[x]) opt += ' selected="selected"';
 				opt += '>' +text+'</option>';
 			}
 			this.dom[x]['object'] = id = opts.name+'_'+x;
 			this.dom[x]['select'] = '<select id="'+id+'" class="multi-select" autocomplete="off"><option value="">'+optext+'</option></select>';
 			this.dom[x]['option'] = opt;
-			if ('undefined' == typeof tmp || tmp.length < 1) break;
+			if ('undefined'===typeof tmp || tmp.length < 1) break;
 			data = tmp;
 		}
 		return this.draw();
