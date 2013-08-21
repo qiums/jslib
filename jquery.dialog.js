@@ -24,7 +24,6 @@ dialog.prototype = {
 		return this.options;
 	},
 	show: function(opt){
-		var me = this;
 		this.options = opt || this.getopt();
 		this.isshow = true;
 		this.backdrop('draw');
@@ -227,12 +226,13 @@ dialog.prototype = {
 				}else{
 					if (this.options.type === 'frame') return this.frame();
 					if (href && '#'!==href && 'javascript:;'!==href){
-						b.height(200);
+						//b.height(200);
 						this.position();
 						return b.addClass('loading')
-							.load(href, function(){
+							.load(href, {'ajax':'html'}, function(){
 								b.removeClass('loading');
 								me.position();
+								me.render();
 							});
 					}
 				}

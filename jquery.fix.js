@@ -359,12 +359,12 @@ $.fn.iscroll = function(k, w, fn){
 	var cache=[],iscroll;k=k||'gt',data={};
 	if ($.isFunction(w)){
 		fn = w;w=null;
-	}else if('array'==$.type(w)){
+	}else if('array'===$.type(w)){
 		fn = w[1];
 		data = w[0];
 		w = null;
 	}
-	if ('number'==$.type(k)){
+	if ('number'===$.type(k)){
 		w=k;k='gt';
 	}
 	this.each(function(){
@@ -376,11 +376,11 @@ $.fn.iscroll = function(k, w, fn){
 			if (!me) return true;
 			var o=$(me.obj),url=$(o).attr('href');
 			ot=me.offset.top;
-			if (!url&&'gt'==k) dth-=dh;
-			if(('gt'==k && dth>ot) || ('lt'==k && dth<ot)){
+			if (!url&&'gt'===k) dth-=dh;
+			if(('gt'===k && dth>ot) || ('lt'===k && dth<ot)){
 				if (url){
 					cache[i]=null;
-					if (url.search(/(jpg|jpeg|gif|png)$/gi)!=-1) {
+					if (url.search(/(jpg|jpeg|gif|png)$/gi)!==-1) {
 						$('<img>').loadimg(url,w).appendTo(o);
 						if ($.isFunction(fn)) fn.call(o[0]);
 					}else{
@@ -426,7 +426,7 @@ $.ajaxSetup({
 		if (this.type === 'POST'){
 			if ($.G && $.G.token) this.data += '&token=' + $.G.token;
 		}
-		$('<div class="ajax-loading" />').prependTo('body');
+		//$('<div class="ajax-loading" />').prependTo('body');
 	},
 	error: function(xhr, text, err) {
 		if ('timeout' === text) {
@@ -436,7 +436,7 @@ $.ajaxSetup({
 		}
 	},
 	complete: function(xhr, ts) {
-		$('.ajax-loading').remove();
+		//$('.ajax-loading').remove();
 	}
 	/*,
 	success: function(data){

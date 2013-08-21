@@ -40,13 +40,14 @@ jQuery.fn.ckField = function(val){
 		'any':"^[\\s\\S]+$"
 	};
 	var ob = {
-		dval:$(this).attr('placeholder'), val: val || $(this).val(), 'class': $(this).attr('class'), depr: $(this).attr('depr'), k:0
+		dval:$(this).attr('placeholder'), val: val || $(this).val(), 'class': $(this).attr('class'), depr: $(this).attr('depr'), k:0, req: $(this).attr('required')
 	}, m = {
 		'min': ob['class'].match(/minlength(\d+)/i), 'max': parseInt($(this).attr('maxlength')),
 		rule: ob['class'].match(/rule\-([^\s"'>]+)/i), logic: ob['class'].match(/(checked|notnull|lt|gt)\-([^\s"'>]+)/i)
 	};
-	ob.len = $.trim(ob.val).strlen();
 	if ($(this).is(':disabled')) return true;
+	ob.len = $.trim(ob.val).strlen();
+	if (ob.req && !m['min']) m['min'] = [0, 1];
 	if (ob.dval && ob.dval===ob.val) ob.val = '';
 	if (ob.depr && ob.val !== ''){
 		ob.val = ob.val.split(ob.depr);
