@@ -151,6 +151,7 @@ jQuery.fn.saveForm = function(opts, suc){
 				if ('undefined'===typeof $.dialog) return alert(res.message);
 				if (0===res.code){
 					if ('form-element-error' === res.message && res.body){
+						if ('undefined' === typeof res.body[0]) res.body = [res.body];
 						for (var k in res.body){
 							$(this.formele).trigger('form-check-error', [res.body[k].id, res.body[k].error]);
 						}

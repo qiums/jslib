@@ -215,11 +215,13 @@ dialog.prototype = {
 				}else{
 					b.append(this.options.message);
 				}
-			}else if(this.ele){
-				var href = $(this.ele).attr('href')
-					, target = this.options.target;
-				if (!target && -1 !== href.lastIndexOf('#')){
-					target = href.substr(href.lastIndexOf('#'));
+			}else{
+				var target = this.options.target, href;
+				if (this.ele){
+					href = $(this.ele).attr('href');
+					if (!target && -1 !== href.lastIndexOf('#')){
+						target = href.substr(href.lastIndexOf('#'));
+					}
 				}
 				if ($(target).length){
 					$(target).appendTo(b);
@@ -347,6 +349,10 @@ dialog.prototype = {
 	}
 };
 $.dialog = function(ele, options){
+	if ('object'===$.type(ele)){
+		options = ele;
+		ele = '';
+	}
 	return new dialog(ele, options);
 };
 $.fn.dialog = function(option){
@@ -470,9 +476,9 @@ if (!$.doane){
 		}
 	};
 	$.stopbubble = function(e){
-		if (e && e.stopPropagation) {//非IE浏览器 
+		if (e && e.stopPropagation) {//非IE浏览�?
 			e.stopPropagation(); 
-		}else {//IE浏览器 
+		}else {//IE浏览�?
 			window.event.cancelBubble = true; 
 		} 
 	};
