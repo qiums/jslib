@@ -68,38 +68,32 @@ dialog.prototype = {
 			//this.boxes.append('<div class="ui-popover-content">'+message+'</div>');
 			if (this.options.addclass) container.addClass(this.options.addclass);
 			if (this.options.width) container.css('width', this.options.width).css('max-width',this.options.width);
-			/*this.boxes.on('click.stop-keep',
-			'a,button',
-			function(e){
-				jQuery.doane(e);
-				//$.stopbubble(e);
-			});
-			this.boxes.find(':not(a,button)')
-			.bind('click.stop-keep',
-			function(e){
-				$.doane(e);
-			});*/
 		}
 		//if (parseInt(this.boxes.css('top'),10)>0) return ;
-		var w = this.boxes.outerWidth(),
-			h = this.boxes.outerHeight(),
-			ew = $(this.ele).outerWidth(),
-			eh = $(this.ele).outerHeight(),
-			css = $(this.ele).position();
-		if ('top' === pos){
-			css.left = parseInt((css.left+ew/2) - w/2, 10);
-			css.top = css.top - h;
-		}else if ('bottom' === pos){
-			css.left = parseInt((css.left+ew/2) - w/2, 10);
-			css.top = css.top + eh;
-		}else if ('left' === pos){
-			css.left -= w;
-			css.top = parseInt((css.top+eh/2) - h/2, 10);
-		}else if ('right' === pos){
-			css.left += ew;
-			css.top = parseInt((css.top+eh/2) - h/2, 10);
-		}
-		this.boxes.css(css);
+		var oldrender = this.options.onRender
+		, render = function(){
+			if ($.isFunction(oldrender)) oldrender.call(this);
+			var w = this.boxes.outerWidth(),
+				h = this.boxes.outerHeight(),
+				ew = $(this.ele).outerWidth(),
+				eh = $(this.ele).outerHeight(),
+				css = $(this.ele).position();
+			if ('top' === pos){
+				css.left = parseInt((css.left+ew/2) - w/2, 10);
+				css.top = css.top - h;
+			}else if ('bottom' === pos){
+				css.left = parseInt((css.left+ew/2) - w/2, 10);
+				css.top = css.top + eh;
+			}else if ('left' === pos){
+				css.left -= w;
+				css.top = parseInt((css.top+eh/2) - h/2, 10);
+			}else if ('right' === pos){
+				css.left += ew;
+				css.top = parseInt((css.top+eh/2) - h/2, 10);
+			}
+			this.boxes.css(css);
+		};
+		this.options.onRender = render;
 		this.trigger('Render');
 		if ('follow' === mode) return ;
 		$(document).off('click.hide-popover scroll.hide-popover');
@@ -143,7 +137,7 @@ dialog.prototype = {
 						if ('string'===$.type(this.options.tip)){
 							ftip.append(this.options.tip);
 						}else if (this.options.tip instanceof jQuery){
-							this.options.tip.appendTo(ftip).trigger('tip-callback');
+							this.options.tip.appendTo(ftip).trigger('ui-tip-callback');
 						}
 					}
 					if (this.options.timeout)
@@ -317,6 +311,7 @@ dialog.prototype = {
 			});
 		});*/
 		this.boxes.css('top', '-1000px');
+		me.trigger('Close');
 		$(this.boxes).siblings('.ui-dialog')
 		.each(function(){
 			if (parseInt($(this).css('top'), 10)>0){
@@ -326,8 +321,7 @@ dialog.prototype = {
 		});
 		if (has){
 			var zi = parseInt(me.$backdrop.css('z-index'), 10);
-			me.$backdrop.css('z-index', zi-2);
-			return me.trigger('Close');
+			return me.$backdrop.css('z-index', zi-2);
 		}
 		me.backdrop('Close');
 	},
@@ -349,7 +343,7 @@ dialog.prototype = {
 	}
 };
 $.dialog = function(ele, options){
-	if ('object'===$.type(ele)){
+	if ('undefined'===typeof options && 'object'===$.type(ele)){
 		options = ele;
 		ele = '';
 	}
@@ -476,9 +470,9 @@ if (!$.doane){
 		}
 	};
 	$.stopbubble = function(e){
-		if (e && e.stopPropagation) {//非IE浏览�?
+		if (e && e.stopPropagation) {//非IE浏览�?
 			e.stopPropagation(); 
-		}else {//IE浏览�?
+		}else {//IE浏览�?
 			window.event.cancelBubble = true; 
 		} 
 	};

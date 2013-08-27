@@ -3,7 +3,7 @@ var plupload_plus = function(el, op){
 	//if (!el.id) $(el).attr('id', 'file-' + Math.random());
 	$(el).attr('readonly', true);
 	this.ele = el;
-	this.button = $(this.ele).next('button');
+	this.button = $(el).hasClass('uploadbtn') ? $(el) : $(el).next('button');
 	this.op = jQuery.extend({}, $(el).data() || {}, op || {});
 	this.init();
 };
@@ -12,9 +12,13 @@ plupload_plus.prototype = {
 		if (!this.button.length){
 			this.button = $((this.op.browse ? '<a href="'+ this.op.browse +'" title="' + $.lang('Choose file') + '" />' : '<button type="button" />')).html('<i class="icon-upload"></i>')
 				.addClass('btn').insertAfter(this.ele);
-			this.op.browse ? this.button.on('click.begin-upload', $.proxy(this.open, this)) : this.open();
-			delete this.op.browse;
+			if (this.option.limit){
+				this.button.data('limit', this.option.limit);
+				delete this.option.limit;
+			}
 		}
+		this.op.browse ? this.button.on('click.begin-upload', $.proxy(this.open, this)) : this.open();
+		delete this.op.browse;
 	},
 	open: function(e){
 		if (this.button.is(':button')){
@@ -25,7 +29,7 @@ plupload_plus.prototype = {
 		jQuery.doane(e);
 		var args = jQuery.extend({}, {
 			width:930, id: this.op.panelname || $(this.ele).attr('id'),
-			tip: $('<button type="button" class="btn" />').html('<i class="icon-upload"></i>' + $.lang('Upload')).bind('tip-callback', {op: this.op}, this.upload),
+			tip: $('<button type="button" class="btn" />').html('<i class="icon-upload"></i>' + $.lang('Upload')).bind('ui-tip-callback', {op: this.op}, this.upload),
 			buttons: {
 				'Submit.btn-primary': $.isFunction(this.op.onSubmit) ? this.op.onSubmit : function(){},
 				'Cancel': 'close'
@@ -65,6 +69,10 @@ var pluploader = function(el, options){
 				if ($(el).prev().is(':text')){
 					if (!up.settings.multipart_params.oldfile) up.settings.multipart_params.oldfile = $(el).prev(':text').val();
 					$(el).prev(':text').val(up.files[0].name);
+				}else if ($(el).is('a')){
+					var href = $(el).attr('href');
+					if (href.lastIndexOf('#') !== -1) return ;
+					if (!up.settings.multipart_params.oldfile) up.settings.multipart_params.oldfile = $(el).attr('href');
 				}
 			}
 			return false;
