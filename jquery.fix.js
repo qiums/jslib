@@ -162,12 +162,20 @@ jQuery.extend(jQuery.fn, {
 		if (!$.dialog) return ;
 		return $(this).each(function(){
 			$(this).hover(function(){
-				var src=$(this).data('src') || $(this).attr('href');
+				var me=this, src=$(this).data('src') || $(this).attr('href');
 				if(src==='' || src.lastIndexOf('#')!==-1) return true;
 				if ($.isFunction(fn)){
 					if (false===fn.call(this)) return true;
 				}
-				return $(this).dialog({
+				return $('<img />').loadimg(src,w,h,
+				function(){
+					return $(me).dialog({
+						type:'popover',
+						message: this,
+						position:'right'
+					});
+				});
+				/*return $(this).dialog({
 					type:'popover',
 					message:'<span class="loading"></span>',
 					position:'right',
@@ -175,7 +183,7 @@ jQuery.extend(jQuery.fn, {
 						$('<img />').loadimg(src,w,h).appendTo($('.ui-popover-content', this.boxes));
 						//this.position();
 					}
-				});
+				});*/
 			}, function(){
 				$(this).next('.ui-popover').remove();
 			});
@@ -193,7 +201,7 @@ jQuery.extend(jQuery.fn, {
 				, end = Math.min(start + pp, tp+1)
 				, html='<ul><li><span class="active"><b>'+((p.cur-1)*p.size+1)+'~'+(p.cur*p.size)+'</b>'+p.rows+'</span></li>';
 			if(start>=2) html+='<li class="first"><a href="#" data-page="1">1'+(start>2?'..':'')+'</a></li>';
-			for (i=start;i<=end;i++){
+			for (i=start;i<end;i++){
 				html += (i===p.cur) ? '<li class="disabled"><span>'+i+'</span></li>' : '<li class="first"><a href="#" data-page="'+i+'">'+i+'</a></li>';
 			}
 			if (end<tp) html+='<li class="end"><a href="#" data-page="'+tp+'">'+((end<tp-1)?'..':'')+ tp + '</a></li>';
@@ -445,7 +453,7 @@ $.ajaxSetup({
 	dataType: 'json',
 	timeout: 20000,
 	beforeSend: function(xhr) {
-		if (this.type === 'POST'){
+		if (this.type === 'POST' && this.data.indexOf('token=')===-1){
 			if ($.G && $.G.token) this.data += '&token=' + $.G.token;
 		}
 		//$('<div class="ajax-loading" />').prependTo('body');

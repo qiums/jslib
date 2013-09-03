@@ -12,9 +12,9 @@ plupload_plus.prototype = {
 		if (!this.button.length){
 			this.button = $((this.op.browse ? '<a href="'+ this.op.browse +'" title="' + $.lang('Choose file') + '" />' : '<button type="button" />')).html('<i class="icon-upload"></i>')
 				.addClass('btn').insertAfter(this.ele);
-			if (this.option.limit){
-				this.button.data('limit', this.option.limit);
-				delete this.option.limit;
+			if (this.op.limit){
+				this.button.data('limit', this.op.limit);
+				delete this.op.limit;
 			}
 		}
 		this.op.browse ? this.button.on('click.begin-upload', $.proxy(this.open, this)) : this.open();
@@ -153,8 +153,8 @@ var pluploader = function(el, options){
 				$('.ajax-tips').each(function(){
 					$(this).html($(this).data('default-html'));
 				});
-				$.pluploader.reset(up);
 				$(el).triggerHandler('plupload-UploadComplete', [up, files]);
+				$.pluploader.reset(up);
 			}
 		}
 		}, options || {});

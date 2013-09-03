@@ -7,7 +7,7 @@ var dialog = function(ele, options){
 	}
 	if ('string' !== $.type(ele)){
 		this.ele = ele;
-		if ($(this.ele).attr('id')) options.id = $(this.ele).attr('id');//$(this.ele).attr('id', options.id);
+		if (!options.id && $(this.ele).attr('id')) options.id = $(this.ele).attr('id');//$(this.ele).attr('id', options.id);
 		$(this.ele).data('options', $.extend({}, this.defaults, options || {}));
 	}else{
 		options.message = ele;
@@ -36,8 +36,13 @@ dialog.prototype = {
 		this.options = opt || this.getopt();
 		var title = this.options.title
 			, message = this.options.message
-			, pos = this.options.position;
-		this.boxes = $(this.ele).next('.ui-popover');
+			, pos = this.options.position
+			, id = this.options.id || $(this.ele).attr('id');
+		if (!id){
+			id = 'element-popover-' + new Date();
+			$(this.ele).attr('id', id);
+		}
+		this.boxes = $('#popover-' + id);
 		this.backdrop = false;
 		$('.ui-popover').css('top', -1000);
 		if (!pos) pos = 'bottom'; // top,bottom,left,right
@@ -47,7 +52,8 @@ dialog.prototype = {
 				title = null;
 			}
 			if (!message && !this.options.target) return ;
-			this.boxes = $('<div class="ui-popover ui-popover-' + pos + '" />').insertAfter(this.ele);
+			this.boxes = $('<div class="ui-popover ui-popover-' + pos + '" id="popover-'+ id + '" />');
+			this.options.float==='abs' ? this.boxes.prependTo('body') : this.boxes.insertAfter(this.ele);
 			if (title){
 				var header = $('<h3 class="ui-popover-title" />').append(title).appendTo(this.boxes);
 				if ('follow'===mode){
@@ -68,6 +74,10 @@ dialog.prototype = {
 			//this.boxes.append('<div class="ui-popover-content">'+message+'</div>');
 			if (this.options.addclass) container.addClass(this.options.addclass);
 			if (this.options.width) container.css('width', this.options.width).css('max-width',this.options.width);
+			this.boxes.on('click.hide-boxes', function(e){
+				//if ($(e.target).is('a')) return true;
+				$.doane(e);
+			});
 		}
 		//if (parseInt(this.boxes.css('top'),10)>0) return ;
 		var oldrender = this.options.onRender
@@ -77,7 +87,7 @@ dialog.prototype = {
 				h = this.boxes.outerHeight(),
 				ew = $(this.ele).outerWidth(),
 				eh = $(this.ele).outerHeight(),
-				css = $(this.ele).position();
+				css = $(this.ele)[this.options.float==='abs' ? 'offset' : 'position']();
 			if ('top' === pos){
 				css.left = parseInt((css.left+ew/2) - w/2, 10);
 				css.top = css.top - h;
@@ -107,11 +117,21 @@ dialog.prototype = {
 	},
 	draw: function(){
 		var id = this.options.id
-			, title = this.options.title;
+			, title = this.options.title
+			, zi = [];
 		this.boxes = $('#ui-dialog-' + id);
 		if (this.ele){
 			if (this.ele && $(this.ele).closest('.ui-dialog').length>0){
-				var zi = parseInt($(this.ele).closest('.ui-dialog').css('z-index'));
+				zi = parseInt($(this.ele).closest('.ui-dialog').css('z-index'));
+				this.$backdrop.css('z-index', zi+1);
+				this.options.zi = zi+2;
+			}
+		}else{
+			$('.ui-dialog').each(function(){
+				if (parseInt($(this).css('top'),10)>0) zi.push($(this).css('z-index'));
+			});
+			if (zi.length>0){
+				zi = Math.max.call(window, zi);
 				this.$backdrop.css('z-index', zi+1);
 				this.options.zi = zi+2;
 			}
@@ -415,6 +435,7 @@ $.fn.dropmenu = function(op, g){
 	return this.each(function(){
 		var handle = $(this).next('.dropmenu-handle')
 			,target = 'dropmenu-'+$(this).attr('name');
+		op = jQuery.extend({}, $(this).data('options') || {});
 		op.datakey = $(this).data('kname');
 		op.cachekey = $(this).attr('name').replace(/[\[\]]/, '');
 		if (!handle.length){
@@ -423,11 +444,13 @@ $.fn.dropmenu = function(op, g){
 		}
 		handle.attr('title', $(this).data('label') || $(this).data('alt'));
 		if (!$('#'+target).length) $('<div id="'+target+'" />').appendTo('body');
-		if ($(this).val()!==''){
+		if ($(this).val()!=='' || 'init'===g){
 			dropmenu.call(this, 'init');
+			if ('init'===g) return true;
 		}else{
 			if ('go' === g) return handle.trigger('click.dropmenu');
 		}
+		$(this).data('options', op);
 		handle.on('click.dropmenu', {handle: handle}, $.proxy(dropmenu, this));
 	});
 	function dropmenu(e){

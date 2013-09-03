@@ -36,11 +36,11 @@ jQuery.fn.ckField = function(val){
 		'cnphone': "^((800|400)[\\-]*[0-9]{7,8}|(0[1-9]{1}[0-9]{1,2}[\\-]*)*([2-8]{1}[0-9]{6,7}(\\-\\d+)*|(1|9)\\d{4,5})|[0]?1[358]{1}[0-9]{9})$",
 		'enword':"^[a-z]+$",
 		'string':"^[a-z0-9]*[a-z]+[a-z0-9]*$",
-		'num':"^[0-9]+$",
+		'num':"^[0-9]+(\.?[0-9]+)?$",
 		'any':"^[\\s\\S]+$"
 	};
 	var ob = {
-		dval:$(this).attr('placeholder'), val: val || $(this).val(), 'class': $(this).attr('class'), depr: $(this).attr('depr'), k:0, req: $(this).attr('required')
+		dval:$(this).attr('placeholder'), val: val || $(this).val(), 'class': $(this).attr('class'), depr: $(this).data('depr'), k:0, req: $(this).attr('required')
 	}, m = {
 		'min': ob['class'].match(/minlength(\d+)/i), 'max': parseInt($(this).attr('maxlength')),
 		rule: ob['class'].match(/rule\-([^\s"'>]+)/i), logic: ob['class'].match(/(checked|notnull|lt|gt)\-([^\s"'>]+)/i)
@@ -49,7 +49,7 @@ jQuery.fn.ckField = function(val){
 	ob.len = $.trim(ob.val).strlen();
 	if (ob.req && !m['min']) m['min'] = [0, 1];
 	if (ob.dval && ob.dval===ob.val) ob.val = '';
-	if (ob.depr && ob.val !== ''){
+	if (ob.depr && ob.val !== '' && ob.val.indexOf(ob.depr)>-1){
 		ob.val = ob.val.split(ob.depr);
 		for (ob.k in ob.val){
 			if (!$(this).ckField(ob.val[ob.k])) return false;
@@ -192,11 +192,13 @@ $.ckOption = function(ele, opts){
 		opts.error = function(e, el, tip){
 			tip = tip || $(el).data('alt') || $(el).attr('placeholder');
 			if (tip){
-				if (!$.dialog) return alert(tip);
+				if (!$.dialog || $(el).is(':hidden')){
+					alert(tip);return false;
+				}
 				$(el).closest('li,div').addClass('ckerror');
 				$(el).dialog({type:'popover', message:tip, position:'top'});
 			}
-			try{el.focus();}catch(e){};
+			try{$(el)[0].focus();}catch(e){alert($(el).attr('id'));};
 			return false;
 		}
 	};
